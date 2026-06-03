@@ -1,20 +1,19 @@
 # 🔐 LLM-Based DevSecOps Scanner
 
-Automatically scans Pull Requests for security vulnerabilities using **Gemini AI** + **static analysis**, integrated directly into the GitHub CI/CD pipeline.
+This project scans Pull Requests for security vulnerabilities using **Gemini AI** and a **Python static scanner**, integrated into GitHub Actions.
 
 ---
 
-## 🚀 How It Works
+## How It Works
 
-1. Developer opens a Pull Request targeting `main`
-2. GitHub Actions triggers automatically
-3. Python static scanner checks the diff for known patterns
-4. Gemini AI performs deep contextual analysis
-5. Vulnerabilities are reported as PR comments instantly
+When a Pull Request is opened targeting `main`:
+- The Python scanner checks the code diff for known vulnerability patterns
+- Gemini AI performs a deeper contextual review of the same diff
+- Both results are posted as comments directly on the PR
 
 ---
 
-## 🔍 Detected Vulnerabilities
+## Vulnerabilities Detected
 
 | Vulnerability | Severity | CWE |
 |---|---|---|
@@ -29,7 +28,7 @@ Automatically scans Pull Requests for security vulnerabilities using **Gemini AI
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **GitHub Actions** — CI/CD pipeline automation
 - **Gemini 2.5 Flash** — LLM-powered contextual code review
@@ -37,16 +36,18 @@ Automatically scans Pull Requests for security vulnerabilities using **Gemini AI
 
 ---
 
-## 📁 Project Structure
-├── scanner.py               # Static vulnerability scanner
-├── test_github_action.py    # Sample vulnerable file for testing
-└── .github/workflows/
-├── llm-int.yml          # Gemini AI security review
-├── Comment-git-diff.yml # Posts PR diff as comment
-└── comment-on-pr.yml    # Welcome message on PR
+## Project Structure
+LLM-DevSecOps/
+├── scanner.py                        # Static vulnerability scanner
+├── test_github_action.py             # Sample vulnerable file for testing
+└── .github/
+└── workflows/
+├── llm-int.yml               # Gemini AI security review
+├── Comment-git-diff.yml      # Posts PR diff as comment
+└── comment-on-pr.yml        # Welcome message on PR
 ---
 
-## ⚙️ Setup
+## Setup
 
 1. Fork this repository
 2. Add your Gemini API key as a GitHub secret named `GOOGLE_API_KEY`
