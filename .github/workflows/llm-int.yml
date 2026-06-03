@@ -21,8 +21,18 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run Python static scanner
+        run: python scanner.py
+
       - name: Analyze git diff with Gemini 2.5 Flash Lite
         uses: actions/github-script@v6
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -47,7 +57,7 @@ jobs:
 
             const prompt = `You are a devsecops code reviewer. Analyze the following git diff for any security vulnerabilities such as exposed API keys, SQL injection risks, or other common security flaws. If any issues are found, explain them concisely like a robot Markdown format, listing each issue with the format: ### ⚠️ [Vulnerability Name]\\n**Risk Level:** [LOW | MEDIUM | HIGH | CRITICAL]\\n**Description:** [Brief but clear description]\\n**Fix:** [One-sentence recommended fix]. If none are found, respond with "Clean code – no security issues detected."\n\n${diff}`;
 
-            const apiKey = 'AIzaSyDW7D_GLQWagUGZ3E2FrKRoPw9PKaGP6bM';
+            const apiKey = process.env.GOOGLE_API_KEY;
 
             const requestData = JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
