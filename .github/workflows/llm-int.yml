@@ -109,7 +109,7 @@ jobs:
 
             const reply = response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini';
 
-            // FIX 1: Clean up literal '\n' text strings so markdown renders beautifully
+            // Clean up literal '\n' text strings so markdown renders beautifully
             const cleanReply = reply.replace(/\\n/g, '\n');
 
             // Post report directly to the PR comments
@@ -120,13 +120,13 @@ jobs:
               body: `### DevSecOps Hybrid Scan Report\n\n${cleanReply}`
             });
 
-            // FIX 2: Use a robust case-insensitive regex to enforce the Quality Gate
-            const hasHighOrCritical = /Risk Level:\s*(HIGH|CRITICAL)/i.test(cleanReply);
+            // BULLETPROOF MATCH: Simply check if the text contains the bare words HIGH or CRITICAL
+            const hasHighOrCritical = /CRITICAL|HIGH/i.test(cleanReply);
 
             if (hasHighOrCritical) {
-               console.log("❌ Quality Gate Failed: High or Critical vulnerabilities validated by LLM.");
-               process.exit(1); // This officially turns the GitHub Action RED and blocks the PR
+               console.log("❌ Quality Gate Failed: Severe security flaws verified by the hybrid engine.");
+               process.exit(1); // Forces the GitHub Action to turn RED and block the merge!
             } else {
-               console.log("✅ Quality Gate Passed: No High or Critical issues verified.");
+               console.log("✅ Quality Gate Passed: Code base cleared of severe vulnerabilities.");
                process.exit(0);
             }
