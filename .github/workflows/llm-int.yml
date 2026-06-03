@@ -109,16 +109,24 @@ jobs:
 
             const reply = response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini';
 
+            // FIX 1: Clean up literal '\n' text strings so markdown renders beautifully
+            const cleanReply = reply.replace(/\\n/g, '\n');
+
             // Post report directly to the PR comments
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr.number,
-              body: `### DevSecOps Hybrid Scan Report\n\n${reply}`
+              body: `### DevSecOps Hybrid Scan Report\n\n${cleanReply}`
             });
 
-            // QUALITY GATE ENFORCEMENT: If the LLM validates a HIGH or CRITICAL issue, fail the build!
-            if (reply.includes('Risk Level:** HIGH') || reply.includes('Risk Level:** CRITICAL')) {
-               console.log("❌ Quality Gate Failed: Vulnerabilities detected.");
-               process.exit(1); 
+            // FIX 2: Use a robust case-insensitive regex to enforce the Quality Gate
+            const hasHighOrCritical = /Risk Level:\s*(HIGH|CRITICAL)/i.test(cleanReply);
+
+            if (hasHighOrCritical) {
+               console.log("❌ Quality Gate Failed: High or Critical vulnerabilities validated by LLM.");
+               process.exit(1); // This officially turns the GitHub Action RED and blocks the PR
+            } else {
+               console.log("✅ Quality Gate Passed: No High or Critical issues verified.");
+               process.exit(0);
             }
