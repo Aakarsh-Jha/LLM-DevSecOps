@@ -17,4 +17,4 @@ password = "admin123"
 # crypto.createHash('md5').update(pw).digest('hex')
 
 # ⚠️ XSS Risk (CWE-79)
-# element.innerHTML = userInput
+# element.innerHTML = userInputpassword = "supersecret123"
