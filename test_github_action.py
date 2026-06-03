@@ -2,7 +2,7 @@
 # Intentionally vulnerable sample file for testing the DevSecOps scanner
 
 # ⚠️ Hardcoded API Key (CWE-798)
-HARDCODED_API_KEY = "AKIA1234567890abcdef"
+const HARDCODED_API_KEY = "AKIA_FAKE_KEY_1234567890";
 
 # ⚠️ Weak JWT Secret (CWE-321)
 JWT_SECRET = "supersecret_jwt_key"
