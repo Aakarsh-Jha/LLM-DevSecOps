@@ -31,20 +31,23 @@ def scan_vulnerabilities(diff):
 def main():
     diff = get_diff()
 
-    if not diff:
-        print("⚠️  No diff found. Make sure you're on a branch ahead of origin/main.")
-        sys.exit(0)
+    # Create findings file for Gemini to read later
+    with open("static_findings.txt", "w") as f:
+        if not diff:
+            f.write("No diff found to scan.")
+            sys.exit(0)
 
-    findings = scan_vulnerabilities(diff)
+        findings = scan_vulnerabilities(diff)
 
-    if findings:
-        print("⚠️  Vulnerabilities found:")
-        for f in findings:
-            print(f"  - {f}")
-        sys.exit(1)  # Fail the pipeline if issues found
-    else:
-        print("✅ No vulnerabilities found.")
-        sys.exit(0)
+        if findings:
+            f.write("⚠️ Static Scanner Rule-Based Matches:\n")
+            for finding in findings:
+                f.write(f"  - {finding}\n")
+        else:
+            f.write("✅ Static Scanner found no rule-based vulnerabilities.\n")
+
+    print("✅ Static scan complete. Results passed to temporary buffer.")
+    sys.exit(0)  # Always pass so Gemini can act as the contextual layer
 
 if __name__ == "__main__":
     main()
