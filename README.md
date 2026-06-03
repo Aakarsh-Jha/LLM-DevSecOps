@@ -37,14 +37,13 @@ When a Pull Request is opened targeting `main`:
 ---
 
 ## Project Structure
-LLM-DevSecOps/
-├── scanner.py                        # Static vulnerability scanner
-├── test_github_action.py             # Sample vulnerable file for testing
-└── .github/
-└── workflows/
-├── llm-int.yml               # Gemini AI security review
-├── Comment-git-diff.yml      # Posts PR diff as comment
-└── comment-on-pr.yml        # Welcome message on PR
+
+- `scanner.py` — Static vulnerability scanner
+- `test_github_action.py` — Sample vulnerable file for testing
+- `.github/workflows/llm-int.yml` — Gemini AI security review
+- `.github/workflows/Comment-git-diff.yml` — Posts PR diff as comment
+- `.github/workflows/comment-on-pr.yml` — Welcome message on PR
+
 ---
 
 ## Setup
