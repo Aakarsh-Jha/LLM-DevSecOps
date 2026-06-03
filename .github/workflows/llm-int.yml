@@ -1,7 +1,7 @@
 name: Comment security issues from git diff on PR to main
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize]
     branches: [main]
 
@@ -11,14 +11,13 @@ permissions:
   contents: read
 
 jobs:
-  add-comment:
-    name: Analyze git diff for security vulnerabilities
+  analyze-code:
+    name: Hybrid Security Analysis (Static + LLM)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -29,7 +28,7 @@ jobs:
       - name: Run Python static scanner
         run: python scanner.py
 
-      - name: Analyze git diff with Gemini 2.5 Flash Lite
+      - name: Analyze git diff and filter with Gemini
         uses: actions/github-script@v6
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -38,6 +37,7 @@ jobs:
           script: |
             const { execSync } = require('child_process');
             const https = require('https');
+            const fs = require('fs');
 
             const pr = context.payload.pull_request;
             if (!pr) {
@@ -55,10 +55,32 @@ jobs:
               diff = `Error generating diff: ${error.message}`;
             }
 
-            const prompt = `You are a devsecops code reviewer. Analyze the following git diff for any security vulnerabilities such as exposed API keys, SQL injection risks, or other common security flaws. If any issues are found, explain them concisely like a robot Markdown format, listing each issue with the format: ### ⚠️ [Vulnerability Name]\\n**Risk Level:** [LOW | MEDIUM | HIGH | CRITICAL]\\n**Description:** [Brief but clear description]\\n**Fix:** [One-sentence recommended fix]. If none are found, respond with "Clean code – no security issues detected."\n\n${diff}`;
+            // Read the findings from your Python static scanner file
+            let staticFindings = '';
+            try {
+              staticFindings = fs.readFileSync('static_findings.txt', 'utf-8');
+            } catch (err) {
+              staticFindings = 'No static scanner data available.';
+            }
+
+            // Create a hybrid prompt that enforces semantic filtering
+            const prompt = `You are a DevSecOps code reviewer. Your job is to act as a semantic reasoning layer filtering the results of a basic regex scanner.
+            
+            Here are the rule-based findings from our static scanner:
+            ${staticFindings}
+
+            Here is the raw git diff:
+            ${diff}
+
+            Analyze the findings and the diff context. Ignore false positives (like commented out code or safe variable strings). If actual valid vulnerabilities exist, list them in Markdown format using this exact structure:
+            ### ⚠️ [Vulnerability Name]
+            **Risk Level:** [LOW | MEDIUM | HIGH | CRITICAL]
+            **Description:** [Contextual explanation]
+            **Fix:** [Recommended correction].
+            
+            If no actual security threats exist or everything flagged is a false positive, respond with: "Clean code – no security issues detected."`;
 
             const apiKey = process.env.GOOGLE_API_KEY;
-
             const requestData = JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
               generationConfig: { temperature: 0.2 }
@@ -87,9 +109,16 @@ jobs:
 
             const reply = response?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from Gemini';
 
+            // Post report directly to the PR comments
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: pr.number,
-              body: `Review by the Dev Sec Model:\n\n${reply}`
+              body: `### DevSecOps Hybrid Scan Report\n\n${reply}`
             });
+
+            // QUALITY GATE ENFORCEMENT: If the LLM validates a HIGH or CRITICAL issue, fail the build!
+            if (reply.includes('Risk Level:** HIGH') || reply.includes('Risk Level:** CRITICAL')) {
+               console.log("❌ Quality Gate Failed: Vulnerabilities detected.");
+               process.exit(1); 
+            }
