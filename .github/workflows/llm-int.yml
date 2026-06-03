@@ -21,6 +21,14 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run Python static scanner
+        run: python scanner.py
+
       - name: Analyze git diff with Gemini 2.5 Flash Lite
         uses: actions/github-script@v6
         env:
