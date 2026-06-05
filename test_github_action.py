@@ -1,20 +1,23 @@
 # test_github_action.py
-# Intentionally vulnerable sample file for testing the DevSecOps scanner
+# Intentionally vulnerable sample file for pipeline verification
 
-# ⚠️ Hardcoded API Key (CWE-798)
-HARDCODED_API_KEY = "AKIA1234567890abcdef"
+import sqlite3
+import hashlib
 
-# ⚠️ Weak JWT Secret (CWE-321)
-JWT_SECRET = "supersecret_jwt_key"
+# ⚠️ Hardcoded Mock Key (CWE-798)
+FAKE_API_KEY = "AKIA_MOCK_VAL_1234567890"
 
-# ⚠️ Hardcoded Password (CWE-259)
-password = "admin123"
+# ⚠️ Weak JWT Secret Configuration (CWE-321)
+JWT_SECRET_KEY = "supersecret_jwt_key"
 
-# ⚠️ SQL Injection risk (CWE-89)
-# query = "SELECT * FROM users WHERE id=" + user_input
+def get_user_data(user_id):
+    # ⚠️ SQL Injection Vulnerability (CWE-89)
+    conn = sqlite3.connect("app_database.db")
+    cursor = conn.cursor()
+    query = "SELECT * FROM users WHERE id = '" + str(user_id) + "'"
+    cursor.execute(query)
+    return cursor.fetchall()
 
-# ⚠️ MD5 weak hashing (CWE-327)
-# crypto.createHash('md5').update(pw).digest('hex')
-
-# ⚠️ XSS Risk (CWE-79)
-# element.innerHTML = userInput
+def insecure_password_hash(password):
+    # ⚠️ Cryptographically Broken Hashing Algorithm (CWE-327)
+    return hashlib.md5(password.encode()).hexdigest()
